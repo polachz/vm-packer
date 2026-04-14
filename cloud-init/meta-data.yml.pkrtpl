@@ -1,0 +1,17 @@
+instance-id: ${hostname}
+local-hostname: ${hostname}
+%{ if static_ip != "" ~}
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - ${static_ip}
+      routes:
+        - to: 0.0.0.0/0
+          via: ${gateway}
+      nameservers:
+        addresses: [${dns}]
+%{ endif ~}

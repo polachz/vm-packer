@@ -1,0 +1,15 @@
+os: windows-11
+vm_name: win11-test
+
+# output_dir: artifacts/win11-test
+
+# Static IP in CIDR notation — comment out for DHCP
+static_ip: 192.0.2.60/24
+gateway: 192.0.2.1
+dns: 192.0.2.1
+
+username: wtu
+password: MySecretPass1!
+
+# Windows-specific (ignored for AlmaLinux):
+# win_ssh_public_key: "ssh-ed25519 AAAA..."   # overrides .ssh_public_key file lookup

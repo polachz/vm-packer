@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+
+  <!-- ===================================================================== -->
+  <!-- PASS: specialize (optional, but useful for language/hostname etc.)     -->
+  <!-- ===================================================================== -->
+  <settings pass="specialize">
+    <component name="Microsoft-Windows-International-Core"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <InputLocale>${windows_input_language}</InputLocale>
+      <SystemLocale>${windows_language}</SystemLocale>
+      <UILanguage>${windows_language}</UILanguage>
+      <UserLocale>${windows_language}</UserLocale>
+    </component>
+
+    <!-- Optional: you can add <ComputerName> here in Shell-Setup if you want -->
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <!-- <ComputerName>*</ComputerName> -->
+      <!-- If you need to copy the current user profile to Default: -->
+      <!-- <CopyProfile>true</CopyProfile> -->
+    </component>
+%{ if static_ip != "" ~}
+
+    <!-- Static IP configuration -->
+    <component name="Microsoft-Windows-TCPIP"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <Interfaces>
+        <Interface wcm:action="add">
+          <Ipv4Settings>
+            <DhcpEnabled>false</DhcpEnabled>
+            <Metric>5</Metric>
+            <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
+          </Ipv4Settings>
+          <Identifier>Ethernet0</Identifier>
+          <UnicastIpAddresses>
+            <IpAddress wcm:action="add" wcm:keyValue="1">${static_ip}</IpAddress>
+          </UnicastIpAddresses>
+          <Routes>
+            <Route wcm:action="add">
+              <Identifier>1</Identifier>
+              <Metric>20</Metric>
+              <NextHopAddress>${gateway}</NextHopAddress>
+              <Prefix>0.0.0.0/0</Prefix>
+            </Route>
+          </Routes>
+        </Interface>
+      </Interfaces>
+    </component>
+
+    <component name="Microsoft-Windows-DNS-Client"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <Interfaces>
+        <Interface wcm:action="add">
+          <Identifier>Ethernet0</Identifier>
+          <DNSServerSearchOrder>
+            <IpAddress wcm:action="add" wcm:keyValue="1">${dns}</IpAddress>
+          </DNSServerSearchOrder>
+          <EnableAdapterDomainNameRegistration>false</EnableAdapterDomainNameRegistration>
+          <DisableDynamicUpdate>true</DisableDynamicUpdate>
+        </Interface>
+      </Interfaces>
+    </component>
+%{ endif ~}
+  </settings>
+
+  <!-- ===================================================================== -->
+  <!-- PASS: oobeSystem (main for Sysprep - OOBE, accounts, timezone)        -->
+  <!-- ===================================================================== -->
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-International-Core"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <InputLocale>${windows_input_language}</InputLocale>
+      <SystemLocale>${windows_language}</SystemLocale>
+      <UILanguage>${windows_language}</UILanguage>
+      <UserLocale>${windows_language}</UserLocale>
+    </component>
+
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+
+
+      <FirstLogonCommands>
+        <SynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <CommandLine>cmd /c net user Administrator /active:no</CommandLine>
+          <Description>Disable built-in Administrator</Description>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <Description>Fix autologon issue</Description>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoLogonCount /t REG_DWORD /d 0 /f</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <Description>Register Startup Completion Signal</Description>
+          <!-- Create a self-deleting batch file in All Users Startup folder to detect that bootstraping is finished-->
+          <CommandLine>cmd /c echo powershell -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 10; New-Item -Path 'C:\ProgramData\DeployLogs\bootstrap.finished' -ItemType File -Force" ^&amp; del "%~f0" > "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\signal_ready.bat"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
+
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <NetworkLocation>Work</NetworkLocation>
+        <ProtectYourPC>3</ProtectYourPC>
+      </OOBE>
+
+      <UserAccounts>
+        <AdministratorPassword>
+          <Value>${vm_user_password}</Value>
+          <PlainText>true</PlainText>
+        </AdministratorPassword>
+        <LocalAccounts>
+          <LocalAccount wcm:action="add">
+            <Name>${vm_user_name}</Name>
+            <Group>Administrators</Group>
+            <Password>
+              <Value>${vm_user_password}</Value>
+              <PlainText>true</PlainText>
+            </Password>
+            <!-- Optional:
+            <DisplayName>${vm_user_name}</DisplayName>
+            <Description>Local admin for provisioning</Description>
+            -->
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+
+      <RegisteredOwner>Testing</RegisteredOwner>
+      <RegisteredOrganization>Testing</RegisteredOrganization>
+      <TimeZone>Central Europe Standard Time</TimeZone>
+      <AutoLogon>
+        <Password>
+          <Value>${vm_user_password}</Value>
+          <PlainText>true</PlainText>
+        </Password>
+        <Username>${vm_user_name}</Username>
+        <Enabled>true</Enabled>
+        <LogonCount>1</LogonCount>
+      </AutoLogon>
+
+    </component>
+  </settings>
+
+</unattend>

@@ -1,0 +1,17 @@
+os: almalinux-10
+vm_name: alma-test
+
+# output_dir: artifacts/alma-test
+
+# Static IP in CIDR notation — comment out for DHCP
+static_ip: 192.0.2.56/24
+gateway: 192.0.2.1
+dns: 192.0.2.1
+
+username: atu
+password: MySecretPass1!
+
+# AlmaLinux-specific (ignored for Windows):
+hostname: alma-test
+# ssh_public_key: "ssh-ed25519 AAAA..."   # overrides .ssh_public_key file lookup
+sudo_nopassword: true

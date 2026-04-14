@@ -1,0 +1,22 @@
+#cloud-config
+
+users:
+  - name: ${username}
+    gecos: "${username}"
+    groups: wheel
+    shell: /bin/bash
+    lock_passwd: false
+    plain_text_passwd: ${plain_password}
+%{ if ssh_public_key != "" ~}
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+%{ endif ~}
+
+ssh_pwauth: false
+
+%{ if sudo_nopassword ~}
+write_files:
+  - path: /etc/sudoers.d/${username}
+    content: "${username} ALL=(ALL) NOPASSWD:ALL\n"
+    permissions: '0440'
+%{ endif ~}

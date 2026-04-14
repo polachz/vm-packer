@@ -1,0 +1,33 @@
+---
+- name: Install VMware guest tools and utilities
+  dnf:
+    name:
+      - open-vm-tools
+      - nfs-utils
+      - rsync
+      - jq
+      - tcpdump
+      - tuned
+    state: present
+
+- name: Enable and start open-vm-tools
+  systemd:
+    name: vmtoolsd
+    enabled: true
+    state: started
+
+- name: Enable and start tuned
+  systemd:
+    name: tuned
+    enabled: true
+    state: started
+
+- name: Set tuned profile to virtual-guest
+  command: tuned-adm profile virtual-guest
+
+- name: Configure cloud-init for VMware datasource (guestinfo)
+  copy:
+    dest: /etc/cloud/cloud.cfg.d/99-vmware-datasource.cfg
+    content: |
+      datasource_list: [ VMware, NoCloud, None ]
+      disable_vmware_customization: true

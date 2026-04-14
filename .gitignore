@@ -1,0 +1,31 @@
+# Packer
+packer_cache/
+output-*/
+artifacts/
+*.log
+packer-debug.log
+crash.log
+*.iso
+*.box
+
+# VMware artifacts (if generated outside artifacts folder)
+*.vmx
+*.vmdk
+*.vmem
+*.vmsd
+*.vmxf
+*.nvram
+*.lck
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# SSH keys
+.ssh_public_key
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

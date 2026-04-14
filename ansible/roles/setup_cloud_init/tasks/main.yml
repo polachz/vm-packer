@@ -1,0 +1,26 @@
+---
+- name: Install cloud-init and disk growth utilities
+  dnf:
+    name:
+      - cloud-init
+      - cloud-utils-growpart
+      - dracut-config-generic
+    state: present
+
+- name: Deploy cloud.cfg
+  template:
+    src: cloud.cfg.j2
+    dest: /etc/cloud/cloud.cfg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable cloud-init services
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - cloud-config
+    - cloud-init
+    - cloud-init-local
+    - cloud-final

@@ -1,0 +1,48 @@
+# Top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+# indent_size intentionally not specified in this section
+indent_style = space
+insert_final_newline = true
+
+# Source code
+[*.{cs,ps1,psd1,psm1}]
+indent_size = 4
+end_of_line = lf
+
+# Shell scripts
+[*.sh]
+end_of_line = lf
+indent_size = 4
+
+# Xml project files
+[*.{csproj,resx,ps1xml}]
+indent_size = 2
+
+# Data serialization
+[*.{json,yaml,yml}]
+indent_size = 2
+end_of_line = lf
+
+# Markdown
+[*.md]
+indent_size = 2
+end_of_line = lf
+
+# Xml files
+[*.{resx,ruleset,stylecop,xml,xsd,xsl}]
+indent_size = 2
+
+# Xml config files
+[*.{props,targets,config,nuspec}]
+indent_size = 2
+
+[*.tsv]
+indent_style = tab
+
+# Dotnet code style settings:
+[*.cs]
+# Sort using and Import directives with System.* appearing first
+dotnet_sort_system_directives_first = true

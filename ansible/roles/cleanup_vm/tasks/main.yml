@@ -1,0 +1,104 @@
+---
+# 1. Remove old kernels
+- name: Remove old kernel packages
+  command: dnf remove -y --oldinstallonly
+  ignore_errors: true
+
+# 2. Clean DNF cache and history
+- name: Clean DNF cache
+  command: dnf clean all
+
+- name: Remove DNF history files
+  shell: rm -f /var/lib/dnf/history*
+
+# 3. Remove persistent network rules (prevents MAC address pinning after cloning)
+- name: Remove persistent network udev rules
+  shell: rm -f /etc/udev/rules.d/70*
+
+- name: Remove NetworkManager connection profiles
+  shell: find /etc/NetworkManager/system-connections -name '*.nmconnection' -delete 2>/dev/null || true
+
+# 4. Clean temporary directories
+- name: Remove temporary files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp
+    - /var/tmp
+
+- name: Recreate temp directories with sticky bit
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '1777'
+  loop:
+    - /tmp
+    - /var/tmp
+
+# 5. Remove SSH host keys (will be regenerated on first boot)
+- name: Remove SSH host keys
+  shell: rm -f /etc/ssh/ssh_host_*
+
+# 6. Remove kickstart artifacts
+- name: Remove kickstart files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /root/anaconda-ks.cfg
+    - /root/original-ks.cfg
+
+# 7. Reset machine-id and resolv.conf (cloud-init will repopulate them on first boot)
+- name: Truncate machine-id
+  copy:
+    content: ''
+    dest: /etc/machine-id
+
+- name: Truncate resolv.conf
+  copy:
+    content: ''
+    dest: /etc/resolv.conf
+
+# 8. Clean logs
+- name: Truncate all log files
+  shell: find /var/log -type f -exec truncate -s 0 {} +
+
+- name: Remove log and cloud-init state directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/log/anaconda
+    - /var/log/tuned
+    - /var/lib/cloud
+    - /etc/hostname
+    - /etc/machine-info
+    - /var/lib/systemd/random-seed
+
+# 9. Zero out free disk space (reduces OVA export size via compression)
+- name: Zero out free disk space
+  shell: dd if=/dev/zero of=/zeroed_file bs=1M 2>/dev/null || true; rm -f /zeroed_file
+
+# 10. Flush disk I/O
+- name: Sync filesystem
+  command: sync
+
+# 11. Clear bash history
+- name: Clear bash history
+  shell: |
+    rm -f /root/.bash_history
+    history -c
+
+# 12. Remove PermitRootLogin build configuration (added by kickstart for the build)
+- name: Remove PermitRootLogin build configuration
+  file:
+    path: /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+    state: absent
+
+# 13. Lock root account (set lock_root: false to keep root accessible for debugging)
+- name: Lock root account
+  user:
+    name: root
+    password_lock: true
+  when: lock_root | bool
