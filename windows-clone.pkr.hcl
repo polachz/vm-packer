@@ -22,7 +22,7 @@ locals {
 
 # ====== Builder: vmware-vmx ======
 source "vmware-vmx" "clone" {
-  headless  = true
+  headless  = var.headless
   source_path    = var.template_vmx_path            # e.g. D:/VMs/Win11-GOLD/Win11.vmx
   vm_name        = var.cloned_vm_name
 

@@ -5,7 +5,7 @@
 
 source "vmware-iso" "template" {
 
-  headless  = true
+  headless  = var.headless
   iso_url              = var.iso_url
   iso_checksum         = var.iso_checksum
   guest_os_type        = var.guest_os_type
@@ -31,7 +31,6 @@ source "vmware-iso" "template" {
   cd_files = var.additional_cd_files
   cd_label = "UNATTEND"
   
-  tools_mode          = var.tools_mode
   tools_upload_flavor = var.tools_upload_flavor
 
   output_directory = var.output_directory

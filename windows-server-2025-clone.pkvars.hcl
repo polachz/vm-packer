@@ -20,3 +20,6 @@ provisioner    = []
 
 cloned_vm_name   = "srv2025-clone"
 output_directory = "artifacts/srv2025-clone"
+
+# false = required on VMware Workstation 26 (26H1) — headless mode causes Sysprep failure
+headless = false

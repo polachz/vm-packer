@@ -27,3 +27,5 @@ tools_upload_flavor = "windows"
 
 template_vm_name = "win11-template"
 output_directory = "artifacts/win11-template"
+
+headless = false

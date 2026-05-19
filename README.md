@@ -10,6 +10,7 @@ This project automates the creation of Virtual Machines for VMware Workstation u
 ## Prerequisites
 
 - **VMware Workstation Pro** 17 or later
+  > **VMware Workstation 26 (26H1) compatibility note:** Headless mode (`headless = true`) has a known bug in Windows clone builds — Sysprep fails with SSH error 2300218 when VNC is used. The variable `headless` defaults to `false` for Windows clone builds. If you are on an older version (25.x or earlier) and prefer headless operation, set `headless = true` in the respective `.pkvars.hcl` file.
 - **Packer** in system PATH
 - **PowerShell** for the menu script and Windows provisioner scripts
 - **WSL** with Ansible installed — required for AlmaLinux builds only

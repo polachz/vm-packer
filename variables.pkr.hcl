@@ -1,3 +1,9 @@
+variable "headless" {
+  description = "Run VM without GUI window. Set to false on VMware Workstation 26 (26H1) and newer — headless mode has a known bug causing Sysprep to fail with SSH error 2300218 in Windows clone builds."
+  type        = bool
+  default     = false
+}
+
 variable "winrm_insecure" {
   description = "Skip validating the winrm ssl certificate."
   type        = bool

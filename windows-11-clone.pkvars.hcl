@@ -21,3 +21,6 @@ provisioner    = []
 
 cloned_vm_name   = "win11-clone"
 output_directory = "artifacts/win11-clone"
+
+# false = required on VMware Workstation 26 (26H1) — headless mode causes Sysprep failure
+headless = false

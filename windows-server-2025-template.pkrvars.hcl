@@ -29,3 +29,5 @@ tools_upload_flavor = "windows"
 
 template_vm_name = "srv2025-template" 
 output_directory = "artifacts/srv2025-template"
+
+headless = false

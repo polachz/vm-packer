@@ -21,21 +21,45 @@ if (-not (Get-Command "packer" -ErrorAction SilentlyContinue)) {
 Write-Host " [OK] Packer is installed." -ForegroundColor Green
 
 # 2. Check VMware Workstation
-$vmwareDefaultPath = "C:\Program Files (x86)\VMware\VMware Workstation"
-$vmrunPath = Join-Path $vmwareDefaultPath "vmrun.exe"
 $Global:VmwarePath = ""
 
-if (Test-Path $vmrunPath) {
-    $Global:VmwarePath = $vmwareDefaultPath
-    Write-Host " [OK] VMware Workstation found at: $vmwareDefaultPath" -ForegroundColor Green
-} else {
+# Candidate paths to check (in priority order)
+$vmwareCandidates = @(
+    "C:\Program Files (x86)\VMware\VMware Workstation",
+    "C:\Program Files\VMware\VMware Workstation"
+)
+
+# Registry lookup (most reliable — reflects actual install location)
+$regKey = "HKLM:\SOFTWARE\VMware, Inc.\VMware Workstation"
+if (Test-Path $regKey) {
+    $regPath = (Get-ItemProperty -Path $regKey -ErrorAction SilentlyContinue).InstallPath
+    if (-not [string]::IsNullOrWhiteSpace($regPath)) {
+        $regPath = $regPath.TrimEnd('\')
+        if ($vmwareCandidates -notcontains $regPath) {
+            $vmwareCandidates = @($regPath) + $vmwareCandidates
+        } else {
+            $vmwareCandidates = @($regPath) + ($vmwareCandidates | Where-Object { $_ -ne $regPath })
+        }
+    }
+}
+
+foreach ($candidate in $vmwareCandidates) {
+    if (Test-Path (Join-Path $candidate "vmware.exe")) {
+        $Global:VmwarePath = $candidate
+        Write-Host " [OK] VMware Workstation found at: $candidate" -ForegroundColor Green
+        break
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($Global:VmwarePath)) {
+    # Last resort: vmrun.exe in PATH
     if (Get-Command "vmrun" -ErrorAction SilentlyContinue) {
         $cmd = Get-Command "vmrun"
         $Global:VmwarePath = Split-Path $cmd.Source -Parent
         Write-Host " [OK] VMware Workstation found in PATH: $($Global:VmwarePath)" -ForegroundColor Green
     } else {
         Write-Host "Error: VMware Workstation not found." -ForegroundColor Red
-        Write-Host "Please ensure VMware Workstation is installed."
+        Write-Host "Please install VMware Workstation: https://www.vmware.com/products/workstation-pro.html"
         exit 1
     }
 }
@@ -428,6 +452,23 @@ function Run-PackerBuild {
         Write-Host "Packer build command: packer build -force -only=$PackerOnlyParam -var-file=$VarFile ..." -ForegroundColor Gray
         $env:PACKER_LOG = 1
         Write-Host "Enabled PACKER_LOG=1" -ForegroundColor DarkGray
+    }
+
+    # Ensure all required plugins are installed before building
+    Write-Host "Running packer init..." -ForegroundColor DarkGray
+    $initOutput = & packer init . 2>&1
+    $initExitCode = $LASTEXITCODE
+    $initOutput | ForEach-Object { Write-Host $_ }
+    $initHasError = $initOutput | Select-String -Pattern "^Error:" -Quiet
+    if ($initExitCode -ne 0 -or $initHasError) {
+        Write-Host "" 
+        Write-Host "Error: packer init failed — one or more plugins could not be installed." -ForegroundColor Red
+        Write-Host "Check internet connectivity or install missing plugins manually:" -ForegroundColor Yellow
+        Write-Host "  packer init ." -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "Press any key to return to the menu..." -ForegroundColor DarkGray
+        [Console]::ReadKey($true) | Out-Null
+        return
     }
     if ($IsClone) {
         Write-Host ""
