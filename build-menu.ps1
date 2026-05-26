@@ -511,6 +511,7 @@ function Run-PackerBuild {
 
     Write-Host ""
     Write-Host "Press any key to return to the menu..." -ForegroundColor DarkGray
+    $Host.UI.RawUI.FlushInputBuffer()
     [Console]::ReadKey($true) | Out-Null
 }
 
